@@ -100,14 +100,18 @@ under [src/cvclaw/](src/cvclaw/), each with one job:
    timeline`); all models use `extra="forbid"` so JSON typos surface as
    real errors instead of silently rendering nothing.
 
-2. **`templates_loader.py`** — auto-discovers templates by globbing
-   `templates/*/` for a matching `<name>.html.j2`. Names beginning with
-   `_` are skipped (reserved for shared partials). Also builds the Jinja
-   `Environment` rooted at the **whole** templates directory (not at one
-   template's folder), so a template can `{% import "classic/_macros..."
-   %}` cross-folder, and shared partials in `_partials/` are reachable
-   the same way. Autoescape is on; `StrictUndefined` is used so typos
-   like `resume.headers.name` raise instead of rendering empty.
+2. **`templates_loader.py`** — auto-discovers templates from **two
+   roots**: the workspace (`./.cvclaw/templates/`) and the bundled
+   package directory (`src/cvclaw/templates/`). Workspace is searched
+   first, so a workspace template shadows a bundled one of the same
+   name; a single `--templates-dir` collapses discovery to that one
+   root. Names beginning with `_` are skipped (reserved for shared
+   partials). The Jinja `Environment` is built with a `FileSystemLoader`
+   holding *all* configured roots so a template can `{% import
+   "classic/_macros..." %}` across folders and shared partials in
+   `_partials/` are reachable the same way. Autoescape is on;
+   `StrictUndefined` is used so typos like `resume.headers.name` raise
+   instead of rendering empty.
 
 3. **`render.py`** — the integration point. `render_resume(...)` loads
    the validated `Resume` into Jinja context, renders the template body,
@@ -118,8 +122,12 @@ under [src/cvclaw/](src/cvclaw/), each with one job:
    pydantic model (not `.model_dump()`), so templates access fields via
    attribute syntax (`resume.header.name`, `section.data.items`).
 
-4. **`cli.py`** — Typer CLI. `render` calls `render_file`; `validate`
-   only runs `load_resume`; `list-templates` calls `discover_templates`.
+4. **`cli.py`** — Typer CLI. `render` calls `render_file` and accepts
+   `--output-dir` (translated to a concrete `output` path before
+   delegating; `-o` wins when both are set). `validate` only runs
+   `load_resume`. `list-templates` calls `discover_templates` and
+   annotates each entry with its source — `(workspace)` or `(bundled)`
+   — except when `--templates-dir` collapses to single-root mode.
    `serve` is a stub that imports `cvclaw.serve` lazily and tells the
    user to install the `[serve]` extra — the serve module is not yet
    implemented.
@@ -129,7 +137,7 @@ under [src/cvclaw/](src/cvclaw/), each with one job:
 
 ### Template contract
 
-Templates live at `templates/<name>/`:
+Templates live at `<root>/<name>/` (in either root):
 
 - `<name>.html.j2` — entry point. Renders the body markup only.
 - `<name>.css` — auto-inlined into a `<style>` block at render time.
@@ -138,9 +146,12 @@ Templates live at `templates/<name>/`:
 - `_macros.html.j2` (optional) — section renderers as Jinja macros.
   Imported via `{% import "<name>/_macros.html.j2" as m %}`.
 
-`templates/classic/` is the reference template. The starter scaffolding
-copied by the `create-template` skill lives at
-[skills/create-template/assets/starter/](skills/create-template/assets/starter/).
+The bundled `classic` (at `src/cvclaw/templates/classic/`) is the
+reference template. The starter scaffolding copied by the
+`create-template` skill lives at
+[skills/cv-claw/assets/starter/](skills/cv-claw/assets/starter/) and
+gets dropped into `./.cvclaw/templates/<name>/` in the user's
+workspace.
 
 ### Section kinds — the load-bearing abstraction
 
@@ -156,16 +167,22 @@ template auto-detects via `selectattr("bullets") | list | length > 0`.
 
 ### Skills
 
-The three skills in [skills/](skills/) — `ingest-resume`,
-`tailor-resume`, `create-template` — are Claude Code skills shipped with
-the repo. They end by handing off to the `cv-claw` CLI for rendering.
-`create-template`'s `assets/starter/` is the Jinja boilerplate users
-clone into a new `templates/<name>/` folder. Each SKILL.md inlines the
-resume schema it needs, so skills are self-contained — users copy only
-the `skills/` directory into their own workspace. The authoritative
-schema implementation is the pydantic models in
+One [Agent Skill](https://agentskills.io) lives at
+[skills/cv-claw/](skills/cv-claw/). The main `SKILL.md` is intentionally
+thin — a description and a routing table. The three resume tasks
+(ingest, tailor, create-template) each live as a single reference file
+under `references/`, loaded on demand via progressive disclosure. The
+schema lives in **one place**: `references/schema.md`. The
+`assets/starter/` directory holds the Jinja boilerplate the
+create-template task copies into the user's
+`./.cvclaw/templates/<name>/` folder. Ingest and tailor discover the
+user's preferred resume-JSON directory via workspace `CLAUDE.md`
+(`## cv-claw: resume location`) or by asking once — they don't assume
+`resumes/`.
+
+The authoritative schema implementation is the pydantic models in
 [src/cvclaw/schema.py](src/cvclaw/schema.py); if those change, update
-the inlined `## Schema` section in each SKILL.md.
+`skills/cv-claw/references/schema.md` (single source — no fan-out).
 
 ## Conventions worth knowing
 
