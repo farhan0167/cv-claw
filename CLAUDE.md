@@ -1,8 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code working in this repo. Keep this file short —
-load-bearing rules only. Everything else lives in code, skills, or
-`README.md`.
+Guidance for Claude Code working in this repo.
 
 ## Project shape
 
@@ -84,15 +82,3 @@ change. No other fan-out.
   cross-template leakage when CSS is inlined.
 - Directory names beginning with `_` are reserved for shared partials
   and skipped by discovery.
-
-## Conventions worth knowing
-
-- **Python ≥ 3.10** (`requires-python = ">=3.10"`); dev env is 3.12.
-  Ruff `target-version = "py310"` enforces the lower bound.
-- **Absolute imports** from the `cvclaw` package, never relative.
-- **No backward-compat shims.** Pre-1.0 OSS — break and update callers.
-- **`serve` is deliberately a stub.** `src/cvclaw/serve.py` doesn't
-  exist; the CLI catches the `ImportError` and prints an install hint.
-  When implementing, only import from the optional `[serve]` extra.
-- **`.claude/specifications/` is gitignored.** Specs live there
-  locally; they're not part of the public repo.
