@@ -1,0 +1,18 @@
+{# Classic template — port of Classic.tsx from the JS version. #}
+{% import "classic/_macros.html.j2" as m %}
+<div class="classic">
+  <div class="page">
+    {{ m.header(resume.header) }}
+    {% for section in resume.sections %}
+      {% if section.kind == "prose" %}
+        {{ m.prose(section) }}
+      {% elif section.kind == "keyvalue" %}
+        {{ m.keyvalue(section) }}
+      {% elif section.kind == "list" %}
+        {{ m.list_section(section) }}
+      {% elif section.kind == "timeline" %}
+        {{ m.timeline(section) }}
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>

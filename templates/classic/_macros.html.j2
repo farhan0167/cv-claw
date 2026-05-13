@@ -1,0 +1,101 @@
+{# Section heading shared across kinds. #}
+{% macro section_heading(name) %}
+<h2 class="section">{{ name }}</h2>
+<hr class="rule">
+{% endmacro %}
+
+
+{% macro header(h) %}
+{% set contact = h.contact %}
+{% set links = h.links or [] %}
+<header class="top">
+  <div class="left">
+    {% if contact %}
+      {% if contact.location %}{{ contact.location }}<br>{% endif %}
+      {% if contact.email %}<a href="mailto:{{ contact.email }}">{{ contact.email }}</a><br>{% endif %}
+      {% if contact.phone %}{{ contact.phone }}<br>{% endif %}
+      {% if contact.note %}{{ contact.note }}{% endif %}
+    {% endif %}
+  </div>
+  <div class="name">{{ h.name }}</div>
+  <div class="right">
+    {% for l in links %}
+      <span><a href="{{ l.href }}">{{ l.label }}</a>{% if not loop.last %}<br>{% endif %}</span>
+    {% endfor %}
+  </div>
+</header>
+{% endmacro %}
+
+
+{% macro prose(section) %}
+<section class="prose">
+  {{ section_heading(section.name) }}
+  <p>{{ section.data.body }}</p>
+</section>
+{% endmacro %}
+
+
+{% macro keyvalue(section) %}
+<section class="keyvalue">
+  {{ section_heading(section.name) }}
+  <ul>
+    {% for it in section.data.items %}
+      <li><span class="label">{{ it.label }}</span> {{ it.value }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endmacro %}
+
+
+{% macro list_section(section) %}
+<section class="list">
+  {{ section_heading(section.name) }}
+  <ul>
+    {% for it in section.data.items %}
+      <li>
+        {% if it.href %}<a href="{{ it.href }}">{{ it.text }}</a>{% else %}{{ it.text }}{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endmacro %}
+
+
+{% macro timeline(section) %}
+{% set items = section.data.items %}
+{% set any_bullets = items | selectattr("bullets") | list | length > 0 %}
+{% if not any_bullets %}
+<section class="timeline compact">
+  {{ section_heading(section.name) }}
+  <ul>
+    {% for it in items %}
+      <li>
+        <span><strong>{{ it.title }}</strong> {{ it.org or "" }}</span>
+        {% if it.dates %}<span class="dates">{{ it.dates }}</span>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% else %}
+<section class="timeline">
+  {{ section_heading(section.name) }}
+  {% for it in items %}
+    <div class="item">
+      <div class="item-header">
+        <div class="item-title">
+          {% if it.href %}<a href="{{ it.href }}">{{ it.title }}</a>{% else %}{{ it.title }}{% endif %}
+        </div>
+        {% if it.dates %}<div class="item-dates">{{ it.dates }}</div>{% endif %}
+      </div>
+      {% if it.org %}<div class="item-sub">{{ it.org }}</div>{% endif %}
+      {% if it.location %}<div class="item-location">{{ it.location }}</div>{% endif %}
+      {% if it.bullets %}
+        <ul>
+          {% for b in it.bullets %}<li>{{ b }}</li>{% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  {% endfor %}
+</section>
+{% endif %}
+{% endmacro %}
