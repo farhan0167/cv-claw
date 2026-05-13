@@ -156,16 +156,18 @@ template auto-detects via `selectattr("bullets") | list | length > 0`.
 
 ### Skills
 
-The three skills in [skills/](skills/) — `ingest-resume`,
-`tailor-resume`, `create-template` — are Claude Code skills shipped with
-the repo. They end by handing off to the `cv-claw` CLI for rendering.
-`create-template`'s `assets/starter/` is the Jinja boilerplate users
-clone into a new `templates/<name>/` folder. Each SKILL.md inlines the
-resume schema it needs, so skills are self-contained — users copy only
-the `skills/` directory into their own workspace. The authoritative
-schema implementation is the pydantic models in
+One [Agent Skill](https://agentskills.io) lives at
+[skills/cv-claw/](skills/cv-claw/). The main `SKILL.md` is intentionally
+thin — a description and a routing table. The three resume tasks
+(ingest, tailor, create-template) each live as a single reference file
+under `references/`, loaded on demand via progressive disclosure. The
+schema lives in **one place**: `references/schema.md`. The
+`assets/starter/` directory holds the Jinja boilerplate the
+create-template task copies into a new `templates/<name>/` folder.
+
+The authoritative schema implementation is the pydantic models in
 [src/cvclaw/schema.py](src/cvclaw/schema.py); if those change, update
-the inlined `## Schema` section in each SKILL.md.
+`skills/cv-claw/references/schema.md` (single source — no fan-out).
 
 ## Conventions worth knowing
 

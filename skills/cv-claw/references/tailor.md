@@ -1,10 +1,4 @@
----
-name: tailor-resume
-description: Tailor an existing cv-claw resume JSON for a specific job description. Use when the user provides a job description (or URL) and wants their resume optimized for that role — bullets rewritten, skills reordered, irrelevant experience trimmed. Produces a new variant resumes/{base}-{slug}.json, never overwriting the source.
-compatibility: Reads and writes resumes/*.json files. Render via `cv-claw render resumes/{base}-{slug}.json`.
----
-
-# tailor-resume
+# tailor
 
 Produce a job-specific variant of an existing resume.
 
@@ -12,11 +6,8 @@ Produce a job-specific variant of an existing resume.
 
 The user has:
 1. A resume already ingested as a cv-claw JSON file (or one they're
-   about to ingest), AND
+   about to ingest — see [ingest.md](ingest.md)), AND
 2. A specific job description they want to apply for.
-
-They'll say "tailor my resume for this role", "make a version for X",
-"adjust this for the JD", etc.
 
 ## What to produce
 
@@ -27,63 +18,10 @@ They'll say "tailor my resume for this role", "make a version for X",
   `ada-acme-corp.json`.
 
 **Never overwrite the source.** The user keeps the original as their
-canonical resume; tailored variants are alongside it.
+canonical resume; tailored variants live alongside it.
 
-The output must conform to the cv-claw schema (defined below). Same
+The output must conform to the schema — [schema.md](schema.md). Same
 shape as the input, just edited content.
-
-## Schema
-
-Authoritative implementation: pydantic models in `src/cvclaw/schema.py`
-(strict — unknown fields fail validation). Validate with
-`cv-claw validate <file.json>`.
-
-```python
-class Link(BaseModel):
-    label: str
-    href: str
-
-class Contact(BaseModel):
-    location: str | None = None
-    email: str | None = None
-    phone: str | None = None
-    note: str | None = None         # free-form, e.g. visa status
-
-class Header(BaseModel):
-    name: str
-    contact: Contact | None = None
-    links: list[Link] = []
-
-class TimelineItem(BaseModel):
-    title: str
-    org: str | None = None
-    location: str | None = None
-    dates: str | None = None        # free-form: "Jan 2023 – Present", "2019"
-    href: str | None = None
-    bullets: list[str] = []         # empty → item renders compactly
-
-class Resume(BaseModel):
-    template: str                   # template key, e.g. "classic"
-    header: Header
-    sections: list[Section]         # rendered top-to-bottom
-```
-
-`Section` is a discriminated union on `kind`. Every section has a `name`
-(the heading) and a `data` payload whose shape depends on `kind`:
-
-| `kind`     | `data` shape                                            | Use for                                       |
-|------------|---------------------------------------------------------|-----------------------------------------------|
-| `prose`    | `{ body: str }`                                         | Summary, objective, short bio                 |
-| `keyvalue` | `{ items: [{ label: str, value: str }] }`               | Skills by category, certifications, languages |
-| `list`     | `{ items: [{ text: str, href: str \| None }] }`         | Publications, interests, references           |
-| `timeline` | `{ items: [TimelineItem] }`                             | Experience, education, projects               |
-
-Field discipline:
-- Dates are free-form strings — use the resume's original format.
-- String fields render as plain text; only `href` becomes a link.
-- `sections[]` and each section's `items[]` render top-to-bottom.
-- Omit optional fields entirely rather than including them as `""` or
-  `[]`. Omit `bullets` rather than `"bullets": []`.
 
 ## Procedure
 
@@ -101,20 +39,20 @@ Field discipline:
    `template` and `header` exactly. The user's name and contact info
    never change across variants.
 
-4. **Read [references/tailoring-guide.md](references/tailoring-guide.md)**
-   for the judgment calls on what to cut, rewrite, and reorder.
+4. **Read [tailoring-guide.md](tailoring-guide.md)** for the judgment
+   calls on what to cut, rewrite, and reorder.
 
 5. **Tailor the content.** In rough order of impact:
    - **Reorder skills** so the most relevant ones (matching the JD's
      required tech) appear first within each `keyvalue` row.
-   - **Reorder timeline items** rarely — usually keep reverse-chronological
-     within each section. But if the user has, say, two roles at the
-     same time, surface the more relevant one.
+   - **Reorder timeline items** rarely — usually keep
+     reverse-chronological. But if the user has two roles at the same
+     time, surface the more relevant one.
    - **Rewrite bullets** to mirror the JD's vocabulary where honest.
-     Don't fabricate. See the tailoring guide for rules.
+     Don't fabricate. See the tailoring guide.
    - **Trim bullets** that don't pull weight for this role. A bullet
      about React when applying to a backend role is dead weight —
-     either rewrite it to focus on the backend aspect, or drop it.
+     either rewrite to focus on the backend aspect, or drop it.
    - **Drop sections** the JD makes irrelevant. If a backend role has
      no design component, the "Design" section can go.
 
@@ -142,10 +80,9 @@ Field discipline:
 - **JD is a URL, not text.** Ask the user to paste the text, or fetch
   the page if you have web access. Don't guess at JD content.
 
-- **No source resume yet.** If the user hasn't ingested one, run the
-  `ingest-resume` skill first, then this one. Don't try to tailor from
-  raw PDF in one pass — the schema-conformance step deserves its own
-  pass.
+- **No source resume yet.** Run [ingest.md](ingest.md) first, then
+  this. Don't try to tailor from raw PDF in one pass — the
+  schema-conformance step deserves its own pass.
 
 - **Multiple tailoring rounds for the same JD.** If the user wants to
   iterate, edit the existing variant file rather than creating a third
@@ -158,11 +95,10 @@ Field discipline:
 - **Don't change `header`.** Name, contact, links stay identical across
   variants.
 - **Don't change `template`.** The user picks their visual style; this
-  skill only changes content.
+  task only changes content.
 - **Don't delete the source file.** The variant goes alongside it.
 - **Don't over-tailor.** If 80% of the bullets get rewritten, the
-  resume starts feeling AI-shaped. Aim for surgical edits — the user's
-  voice should still come through.
+  resume starts feeling AI-shaped. Aim for surgical edits.
 
 ## After producing the file
 

@@ -55,18 +55,20 @@ A resume is a JSON document with a `template`, a `header`, and a list of
 `list`, or `timeline` — and is dispatched to the matching renderer in
 the template.
 
-## Using the skills in your own workspace
+## Using the skill in your own workspace
 
-The [`skills/`](skills/) directory ships three Claude skills —
-`ingest-resume`, `tailor-resume`, and `create-template` — designed for
-the workflow where you run `cv-claw` from your own resume workspace.
-Each skill is self-contained (it inlines the schema it needs). To use:
+The [`skills/cv-claw/`](skills/cv-claw/) directory ships a single
+[Agent Skill](https://agentskills.io) covering three resume tasks —
+ingest (PDF/image/text → JSON), tailor (adapt for a job description),
+and create-template (new Jinja2 layout). The main `SKILL.md` stays
+small; each task lives under `references/` and is loaded on demand.
+
+To use:
 
 1. Install cv-claw in your workspace: `uv add cv-claw` (or
    `pip install cv-claw`).
-2. Copy the `skills/` directory into your workspace.
-3. Point Claude at the skills (e.g. via your Claude Code setup) and
-   start producing resume JSON.
+2. Copy `skills/cv-claw/` into your workspace's skills directory.
+3. Point your agent at it and start producing resume JSON.
 
 ## Templates
 
