@@ -32,8 +32,9 @@ def render_resume(
     resume:
         The validated resume model.
     templates_dir:
-        Optional override of the templates directory. Defaults to the
-        ``templates/`` directory bundled at the repo root.
+        Optional override that replaces the default search roots
+        (``./.cvclaw/templates/`` + the bundled package templates) with a
+        single root.
     template_override:
         Optional template name that overrides ``resume.template`` (useful for
         previewing the same resume across templates without editing JSON).

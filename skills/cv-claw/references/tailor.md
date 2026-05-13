@@ -11,7 +11,10 @@ The user has:
 
 ## What to produce
 
-**A new file** at `resumes/<base>-<slug>.json`, where:
+**A new file** at `<dir>/<base>-<slug>.json`, where:
+- `<dir>` is the directory that holds the source resume — variants
+  live next to their source, never in a different directory. If the
+  user passed an absolute path, write the variant next to it.
 - `<base>` is the source resume's filename (without `.json`).
 - `<slug>` is a short identifier for the target job — usually the
   company name lowercased and hyphenated, e.g. `default-stripe.json`,
@@ -25,7 +28,11 @@ shape as the input, just edited content.
 
 ## Procedure
 
-1. **Read the source resume** at `resumes/<base>.json`.
+1. **Read the source resume** at the path the user passed. If the
+   user named the resume by short identifier rather than full path,
+   resolve `<dir>` via the same discovery sequence as
+   [ingest.md](ingest.md) step 7 (workspace `CLAUDE.md` → ask →
+   optionally persist), then read `<dir>/<base>.json`.
 
 2. **Read the job description.** Identify:
    - Required skills and technologies (especially anything in
@@ -60,8 +67,10 @@ shape as the input, just edited content.
    lowercased and hyphenated. If no clear company name, use a short
    role descriptor (e.g. `default-senior-backend`).
 
-7. **Write the file** to `resumes/<base>-<slug>.json`. Pretty-print
-   with 2-space indentation.
+7. **Write the file** to `<dir>/<base>-<slug>.json`, where `<dir>` is
+   the directory containing the source resume. Pretty-print with
+   2-space indentation. The parent directory is guaranteed to exist
+   already (the source resume is in it).
 
 8. **Tell the user what you changed.**
 
@@ -100,11 +109,34 @@ shape as the input, just edited content.
 - **Don't over-tailor.** If 80% of the bullets get rewritten, the
   resume starts feeling AI-shaped. Aim for surgical edits.
 
+## Where should rendered HTML go?
+
+Before telling the user the render command, decide where HTML output
+should land. Three options:
+
+1. **Next to the JSON** — simplest, default behavior, HTML lives
+   alongside the input file.
+2. **A build directory** like `build/` or `dist/` — clean separation;
+   the user can gitignore it. Use `--output-dir <dir>`.
+3. **A specific file path** — use `-o <path>`. Mainly for one-offs.
+
+Ask the user only if you can't tell. Skip the question if:
+- The user already stated a preference earlier in the session (e.g.
+  during ingest of the source resume).
+- A `build/` or `dist/` directory already exists in the workspace.
+- The user's `.gitignore` mentions a build dir.
+
+Default if no signal: option (1), HTML next to JSON.
+
 ## After producing the file
 
 Tell the user:
 - The output path.
-- The render command: `cv-claw render resumes/<base>-<slug>.json`.
+- The render command, picking the form that matches the HTML-output
+  choice above. Substitute `<json>` with the actual variant path:
+  - `cv-claw render <json>` (HTML next to JSON)
+  - `cv-claw render <json> --output-dir build/` (HTML in a build dir)
+  - `cv-claw render <json> -o /path/to/out.html` (single explicit path)
 - A short summary of what you changed: "Reordered Skills to put
   PostgreSQL/Go first; rewrote 3 bullets in the Stripe role to emphasize
   payment systems; dropped the React-focused bullet from the EFL role."

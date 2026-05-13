@@ -12,6 +12,7 @@ from cvclaw import __version__
 from cvclaw.render import load_resume, render_file
 from cvclaw.templates_loader import (
     TemplateNotFoundError,
+    TemplateSource,
     discover_templates,
 )
 
@@ -65,10 +66,22 @@ def render(
     templates_dir: Optional[Path] = typer.Option(  # noqa: UP007
         None,
         "--templates-dir",
-        help="Override the templates directory.",
+        help="Override the templates directory (replaces default search roots).",
+    ),
+    output_dir: Optional[Path] = typer.Option(  # noqa: UP007
+        None,
+        "--output-dir",
+        help=(
+            "Directory for rendered HTML. Filename derives from input stem. "
+            "Ignored if -o/--output is set."
+        ),
     ),
 ) -> None:
     """Render INPUT JSON to a standalone HTML file."""
+
+    if output is None and output_dir is not None:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output = output_dir / f"{input.stem}.html"
 
     try:
         target = render_file(
@@ -102,8 +115,15 @@ def list_templates(
     if not templates:
         typer.secho("No templates found.", fg=typer.colors.YELLOW, err=True)
         raise typer.Exit(code=1)
-    for name in templates:
-        typer.echo(name)
+
+    # When --templates-dir is used, there's only one root — no annotation
+    # adds signal. Otherwise label each entry by where it was discovered.
+    annotate = templates_dir is None
+    for name, tpl in templates.items():
+        if annotate and tpl.source is not TemplateSource.OVERRIDE:
+            typer.echo(f"{name} ({tpl.source.value})")
+        else:
+            typer.echo(name)
 
 
 @app.command()
@@ -133,9 +153,9 @@ def serve(
     port: int = typer.Option(8000, "--port", "-p", help="Port to listen on."),
     host: str = typer.Option("127.0.0.1", "--host", help="Host to bind to."),
     resumes_dir: Path = typer.Option(
-        Path("resumes"),
+        Path.cwd(),
         "--resumes-dir",
-        help="Directory of resume JSON files to serve.",
+        help="Directory of resume JSON files to serve. Defaults to CWD.",
     ),
     templates_dir: Optional[Path] = typer.Option(  # noqa: UP007
         None,

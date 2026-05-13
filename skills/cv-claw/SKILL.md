@@ -1,7 +1,7 @@
 ---
 name: cv-claw
 description: Work with resumes through the cv-claw CLI — ingest a PDF/image/text resume into the JSON schema, tailor an existing resume JSON for a job description, or create a new visual template (Jinja2 + CSS). Use when the user mentions resumes, CVs, cv-claw, or asks to ingest/import/convert a resume, tailor/adjust a resume for a role, or build/design a resume template. Routes to the right task by reading one reference file on demand.
-compatibility: Requires cv-claw installed in the workspace. Render via `cv-claw render resumes/<file>.json`.
+compatibility: Requires cv-claw installed in the workspace. Render via `cv-claw render <path-to-resume>.json`.
 ---
 
 # cv-claw
@@ -24,11 +24,18 @@ to it; you don't need to read it preemptively.
 ## Workspace assumptions
 
 - The user has installed cv-claw (`uv add cv-claw` or `pip install cv-claw`).
-- Resume JSON files live in `resumes/<name>.json`. Templates live in
-  `templates/<name>/`.
-- Rendering: `cv-claw render resumes/<name>.json` writes
-  `resumes/<name>.html` next to the JSON.
-- Validation: `cv-claw validate resumes/<name>.json`.
+- **Resume JSON location is user-determined.** Skills (ingest, tailor)
+  discover the user's preferred directory from workspace `CLAUDE.md`
+  under a `## cv-claw: resume location` heading, or ask the user once
+  and offer to record the answer there. Never assume `resumes/`.
+- **Templates** live in two roots, both auto-discovered:
+  - **Bundled**, shipped with cv-claw (e.g. `classic`). Read-only.
+  - **Workspace**, at `./.cvclaw/templates/<name>/`. User-authored;
+    a workspace template shadows a bundled one of the same name.
+- Rendering: `cv-claw render <json>` writes `<json>.html` next to the
+  input by default. `--output-dir <dir>` redirects HTML output; `-o
+  <path>` overrides to a single file.
+- Validation: `cv-claw validate <json>`.
 
 ## What not to do
 
@@ -38,6 +45,9 @@ to it; you don't need to read it preemptively.
   `keyvalue`, `list`, `timeline`) are fixed; map novel layouts onto
   them.
 - **Don't edit the source resume** when tailoring — variants go
-  alongside it at `resumes/<base>-<slug>.json`.
-- **Don't register templates anywhere** — cv-claw auto-discovers
-  `templates/<name>/<name>.html.j2`.
+  alongside it (same directory, suffix the filename with the target
+  slug).
+- **Don't assume `resumes/`** in any path. Always resolve the JSON
+  location from `CLAUDE.md` or by asking.
+- **Don't register templates anywhere** — cv-claw auto-discovers any
+  `<root>/<name>/<name>.html.j2` across the workspace and bundled roots.

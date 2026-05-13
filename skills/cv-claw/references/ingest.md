@@ -5,9 +5,11 @@ a cv-claw JSON file.
 
 ## What to produce
 
-**One file**: `resumes/<name>.json`, where `<name>` is a short
-lowercase-with-hyphens identifier (e.g. `default`, `ada-lovelace`).
-If unsure, use `default`.
+**One file**: `<dir>/<name>.json`, where:
+- `<dir>` is the user's chosen resume directory — resolved per the
+  discovery sequence in step 7 below. Never assume `resumes/`.
+- `<name>` is a short lowercase-with-hyphens identifier (e.g.
+  `default`, `ada-lovelace`). If unsure, use `default`.
 
 The file must conform to the schema —
 [schema.md](schema.md).
@@ -54,10 +56,35 @@ The file must conform to the schema —
 6. **Preserve section order** from the original. cv-claw renders
    `sections[]` top-to-bottom in array order.
 
-7. **Write the file** to `resumes/<name>.json`. Pretty-print with
-   2-space indentation.
+7. **Resolve the resume directory.** In this order:
+   a. **Read workspace `CLAUDE.md`** (in the user's CWD) and look for a
+      `## cv-claw: resume location` heading. If found, use the path it
+      names.
+   b. **Otherwise, ask the user** where to store resume JSON. Open
+      question; no default suggestion, no implied `resumes/`. Accept
+      either a directory (e.g. `cv/`, `applications/2026/`, `./`) or a
+      full path including filename.
+   c. **Offer to persist the answer.** Once the user replies, offer to
+      append a `## cv-claw: resume location` section to workspace
+      `CLAUDE.md` so future sessions skip the question. If `CLAUDE.md`
+      doesn't exist, tell the user explicitly that you'll create it
+      and wait for confirmation. If the user declines, proceed without
+      writing.
 
-8. **Tell the user where you put it** and what `template` key it uses
+   Recommended `CLAUDE.md` section format when persisting:
+
+   ```markdown
+   ## cv-claw: resume location
+
+   Store resume JSON files under `<path>/`. When ingesting or
+   tailoring a resume, write to that directory.
+   ```
+
+8. **Create the directory if missing** (`mkdir -p`-equivalent), then
+   **write the file** to `<dir>/<name>.json`. Pretty-print with 2-space
+   indentation.
+
+9. **Tell the user where you put it** and what `template` key it uses
    (default to `"classic"` unless asked otherwise).
 
 ## Edge cases
@@ -88,11 +115,32 @@ The file must conform to the schema —
 - **Don't add a `summary` if there isn't one.** Only include sections
   that exist in the source.
 
+## Where should rendered HTML go?
+
+Before telling the user the render command, decide where HTML output
+should land. Three options:
+
+1. **Next to the JSON** — simplest, default behavior, HTML lives
+   alongside the input file.
+2. **A build directory** like `build/` or `dist/` — clean separation;
+   the user can gitignore it. Use `--output-dir <dir>`.
+3. **A specific file path** — use `-o <path>`. Mainly for one-offs.
+
+Ask the user only if you can't tell. Skip the question if:
+- The user already stated a preference earlier in the session.
+- A `build/` or `dist/` directory already exists in the workspace.
+- The user's `.gitignore` mentions a build dir.
+
+Default if no signal: option (1), HTML next to JSON.
+
 ## After producing the file
 
 Briefly tell the user:
 - Where you wrote the file.
 - Which sections you created and what kind each one is.
-- The render command: `cv-claw render resumes/<name>.json` (writes
-  `resumes/<name>.html` next to the JSON).
+- The render command, picking the form that matches the HTML-output
+  choice above. Substitute `<json>` with the actual path you wrote:
+  - `cv-claw render <json>` (HTML next to JSON)
+  - `cv-claw render <json> --output-dir build/` (HTML in a build dir)
+  - `cv-claw render <json> -o /path/to/out.html` (single explicit path)
 - Any judgment calls you made.

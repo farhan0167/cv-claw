@@ -12,7 +12,8 @@ The user wants a new visual layout for their resume. They might:
 
 ## What to produce
 
-**A new folder** at `templates/<name>/` containing:
+**A new folder** at `./.cvclaw/templates/<name>/` (relative to the
+user's CWD) containing:
 - `<name>.html.j2` — the Jinja2 entry-point template.
 - `<name>.css` — scoped styles, every rule prefixed by the root class.
 - `_macros.html.j2` (optional) — section renderers, factored into macros.
@@ -21,9 +22,19 @@ The user wants a new visual layout for their resume. They might:
 `academic`).
 
 You do **not** need to register the template anywhere — cv-claw
-auto-discovers any `templates/<name>/<name>.html.j2`. Just drop the folder.
+auto-discovers any `<name>/<name>.html.j2` under both
+`./.cvclaw/templates/` (workspace) and the bundled package root.
 Directories starting with `_` are reserved for shared partials and are
 skipped by discovery.
+
+**Shadowing.** If `<name>` matches a bundled template (today: `classic`),
+the workspace copy shadows it. That's the supported way to fork — copy
+the bundled template into `./.cvclaw/templates/<name>/` and edit
+freely.
+
+**The `.cvclaw/` prefix** is reserved for cv-claw workspace state. The
+skill creates `./.cvclaw/templates/` on first use; the user typically
+commits `./.cvclaw/templates/` to version control.
 
 ## Before you start
 
@@ -33,8 +44,11 @@ Read these in order:
 3. [kind-renderers.md](kind-renderers.md) — how each section kind should be rendered.
 4. The starter at [../assets/starter/](../assets/starter/) — boilerplate to copy and modify.
 
-Also look at the existing `templates/classic/` in the workspace as a
-working reference.
+Also look at the bundled `classic` template as a working reference.
+You can list templates and locate the bundled copy by running
+`cv-claw list-templates` (entries are annotated `(bundled)` /
+`(workspace)`); the bundled `classic/` lives inside the installed
+cv-claw package.
 
 ## Procedure
 
@@ -43,7 +57,8 @@ working reference.
    "two-column", "academic", "creative").
 
 2. **Copy the starter** from `assets/starter/` (relative to this skill)
-   into the workspace's `templates/<name>/`. Rename
+   into `./.cvclaw/templates/<name>/`. Create the parent
+   `./.cvclaw/templates/` directory if it doesn't exist. Rename
    `starter.html.j2` → `<name>.html.j2`, `starter.css` → `<name>.css`,
    and replace every occurrence of `starter` (the root CSS class) with
    `<name>`.
@@ -66,13 +81,13 @@ working reference.
    `section.kind`. Adjust the per-kind macros to match the design.
 
 6. **Test by running the renderer.** Set `"template": "<name>"` in any
-   resume JSON (e.g. `resumes/example.json`) and run:
+   resume JSON the user has and run:
 
    ```bash
-   cv-claw render resumes/example.json
+   cv-claw render <path-to-resume>.json
    ```
 
-   This writes `resumes/example.html` next to the JSON. Open it in a
+   This writes an HTML file next to the JSON by default. Open it in a
    browser to inspect. For an iterative loop with auto-reload, run
    `cv-claw serve` (requires the optional `[serve]` extra installed).
 
@@ -104,11 +119,15 @@ working reference.
 ## What not to do
 
 - **Don't edit the renderer or loader.** Auto-discovery handles
-  registration; you only add files under `templates/<name>/`.
+  registration; you only add files under `./.cvclaw/templates/<name>/`.
+- **Don't write to the bundled templates root.** That lives inside the
+  installed cv-claw package and is read-only from the user's
+  perspective. To customize a bundled template, copy it into
+  `./.cvclaw/templates/<same-name>/` (shadowing) and edit there.
 - **Don't import from other templates' folders.** Each template is
   self-contained. If you're tempted to share code, put it under
-  `templates/_partials/` and `{% include %}` from there — but only when
-  three+ templates would actually use it.
+  `./.cvclaw/templates/_partials/` and `{% include %}` from there —
+  but only when three+ templates would actually use it.
 - **Don't add new section kinds.** If the design calls for something
   that doesn't fit the existing four, render it under an existing kind
   (usually `timeline` with custom CSS, or `keyvalue`). Adding kinds is a
@@ -119,9 +138,14 @@ working reference.
 ## After producing the template
 
 Tell the user:
-- The template name and folder path.
+- The template name and folder path (`./.cvclaw/templates/<name>/`).
 - That cv-claw auto-discovered it — no registration needed.
 - How to use it: set `"template": "<name>"` in any resume JSON, then run
-  `cv-claw render resumes/<file>.json`.
+  `cv-claw render <path-to-resume>.json`. Verify discovery with
+  `cv-claw list-templates` — the new entry should appear as
+  `<name> (workspace)`.
+- If the name shadows a bundled template, mention that explicitly so
+  the user knows they've overridden the bundled version in this
+  workspace.
 - Anything you had to make a judgment call on (color choices, fallbacks
   for kinds the design didn't show).
