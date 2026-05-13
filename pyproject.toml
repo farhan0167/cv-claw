@@ -1,0 +1,84 @@
+[project]
+name = "cv-claw"
+version = "0.1.0"
+description = "Render resume JSON to print-ready HTML using Jinja templates."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "farhan0167", email = "ahmadfarhanishraq@gmail.com" },
+]
+requires-python = ">=3.10"
+keywords = ["resume", "cv", "html", "jinja", "pdf"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Text Processing :: Markup :: HTML",
+]
+dependencies = [
+    "jinja2>=3.1",
+    "pydantic>=2.0",
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+serve = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "watchdog>=4.0",
+    "websockets>=12.0",
+]
+pdf = [
+    "weasyprint>=62.0",
+]
+
+[project.scripts]
+cv-claw = "cvclaw.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/farhan0167/cv-claw-py"
+Repository = "https://github.com/farhan0167/cv-claw-py"
+Issues = "https://github.com/farhan0167/cv-claw-py/issues"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.12,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "cvclaw"
+module-root = "src"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+exclude = [
+    ".git",
+    ".ruff_cache",
+    "__pypackages__",
+    "dist",
+    "venv",
+    ".venv",
+    "build",
+    "node_modules",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "I", "W"]
+ignore = ["B008"]
+unfixable = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

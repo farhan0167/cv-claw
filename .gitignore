@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv/
+venv/
+
+# Caches
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local Claude workspace (specs, scratch, settings)
+.claude/specifications
+
+# Generated artifacts
+resumes/*.html
+!resumes/.gitkeep
+
+# Private resumes
+resumes-private/
