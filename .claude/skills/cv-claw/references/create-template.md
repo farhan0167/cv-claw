@@ -1,10 +1,3 @@
----
-name: create-template
-description: Create a new cv-claw template (Jinja2 + CSS) from a design reference. Use when the user wants a new resume layout, shows a PDF or image they want to match, asks to "build a template" or "make a new style", or wants to fork the classic template into a variant. Output is a folder under templates/.
-compatibility: Writes files into templates/. Designed for the cv-claw Python renderer (Jinja2 templates).
-allowed-tools: Read Write Edit Bash(uv:*) Bash(cv-claw:*) Glob Grep
----
-
 # create-template
 
 Scaffold a new cv-claw template from a design reference.
@@ -35,62 +28,13 @@ skipped by discovery.
 ## Before you start
 
 Read these in order:
-1. The **Schema** section below — the JSON shape your template consumes.
-2. [references/template-anatomy.md](references/template-anatomy.md) — CSS scoping rules, page sizing, print conventions.
-3. [references/kind-renderers.md](references/kind-renderers.md) — how each section kind should be rendered.
-4. [assets/starter/](assets/starter/) — boilerplate to copy and modify.
+1. [schema.md](schema.md) — the JSON shape your template consumes.
+2. [template-anatomy.md](template-anatomy.md) — CSS scoping rules, page sizing, print conventions.
+3. [kind-renderers.md](kind-renderers.md) — how each section kind should be rendered.
+4. The starter at [../assets/starter/](../assets/starter/) — boilerplate to copy and modify.
 
-Also look at the existing [templates/classic/](../../templates/classic/)
-as a working reference.
-
-## Schema
-
-The resume JSON that your template will render has this shape
-(authoritative source: pydantic models in `src/cvclaw/schema.py`):
-
-```python
-class Link(BaseModel):
-    label: str
-    href: str
-
-class Contact(BaseModel):
-    location: str | None = None
-    email: str | None = None
-    phone: str | None = None
-    note: str | None = None
-
-class Header(BaseModel):
-    name: str
-    contact: Contact | None = None
-    links: list[Link] = []
-
-class TimelineItem(BaseModel):
-    title: str
-    org: str | None = None
-    location: str | None = None
-    dates: str | None = None
-    href: str | None = None
-    bullets: list[str] = []         # empty → render compactly
-
-class Resume(BaseModel):
-    template: str
-    header: Header
-    sections: list[Section]
-```
-
-`Section` is a discriminated union on `kind`. Each section has a `name`
-(the heading) and a `data` payload whose shape depends on `kind`:
-
-| `kind`     | `data` shape                                            |
-|------------|---------------------------------------------------------|
-| `prose`    | `{ body: str }`                                         |
-| `keyvalue` | `{ items: [{ label: str, value: str }] }`               |
-| `list`     | `{ items: [{ text: str, href: str \| None }] }`         |
-| `timeline` | `{ items: [TimelineItem] }`                             |
-
-In Jinja, the validated `Resume` is bound to `resume` — access fields
-by attribute (`resume.header.name`, `section.data.items`). All optional
-fields can be missing, so guard with `{% if ... %}`.
+Also look at the existing `templates/classic/` in the workspace as a
+working reference.
 
 ## Procedure
 
@@ -98,16 +42,17 @@ fields can be missing, so guard with `{% if ... %}`.
    unsure, or pick something descriptive from the design ("minimalist",
    "two-column", "academic", "creative").
 
-2. **Copy the starter** from `assets/starter/` into `templates/<name>/`.
-   Rename `starter.html.j2` → `<name>.html.j2`, `starter.css` →
-   `<name>.css`, and replace every occurrence of `starter` (the root CSS
-   class) with `<name>`.
+2. **Copy the starter** from `assets/starter/` (relative to this skill)
+   into the workspace's `templates/<name>/`. Rename
+   `starter.html.j2` → `<name>.html.j2`, `starter.css` → `<name>.css`,
+   and replace every occurrence of `starter` (the root CSS class) with
+   `<name>`.
 
 3. **Study the design reference.** Identify:
    - Page proportions (most templates target US Letter, 8.5×11in).
    - Header layout (centered name? top-bar? sidebar with photo?).
    - Section heading style (color, weight, divider, all-caps).
-   - Per-kind treatments — see `references/kind-renderers.md`.
+   - Per-kind treatments — see [kind-renderers.md](kind-renderers.md).
    - Typography (serif/sans/monospace, sizes, line-height).
    - Color palette (accent, text, muted, rule).
 
@@ -167,14 +112,14 @@ fields can be missing, so guard with `{% if ... %}`.
 - **Don't add new section kinds.** If the design calls for something
   that doesn't fit the existing four, render it under an existing kind
   (usually `timeline` with custom CSS, or `keyvalue`). Adding kinds is a
-  schema change, out of scope for this skill.
+  schema change, out of scope.
 - **Don't use `| safe` on user-provided strings.** Anything from the
   resume JSON should remain autoescaped.
 
 ## After producing the template
 
 Tell the user:
-- The template name (`<name>`) and folder path.
+- The template name and folder path.
 - That cv-claw auto-discovered it — no registration needed.
 - How to use it: set `"template": "<name>"` in any resume JSON, then run
   `cv-claw render resumes/<file>.json`.
