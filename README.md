@@ -55,8 +55,18 @@ A resume is a JSON document with a `template`, a `header`, and a list of
 `list`, or `timeline` — and is dispatched to the matching renderer in
 the template.
 
-See [`SCHEMA.md`](SCHEMA.md) for the full schema and
-[`resumes/example.json`](resumes/example.json) for a worked example.
+## Using the skills in your own workspace
+
+The [`skills/`](skills/) directory ships three Claude skills —
+`ingest-resume`, `tailor-resume`, and `create-template` — designed for
+the workflow where you run `cv-claw` from your own resume workspace.
+Each skill is self-contained (it inlines the schema it needs). To use:
+
+1. Install cv-claw in your workspace: `uv add cv-claw` (or
+   `pip install cv-claw`).
+2. Copy the `skills/` directory into your workspace.
+3. Point Claude at the skills (e.g. via your Claude Code setup) and
+   start producing resume JSON.
 
 ## Templates
 

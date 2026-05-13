@@ -1,7 +1,7 @@
 ---
 name: tailor-resume
-description: Tailor an existing cv-claw resume JSON for a specific job description. Use when the user provides a job description (or URL) and wants their resume optimized for that role — bullets rewritten, skills reordered, irrelevant experience trimmed. Produces a new variant resumes/<base>-<slug>.json, never overwriting the source.
-compatibility: Reads and writes resumes/*.json files. Render via `cv-claw render resumes/<base>-<slug>.json`.
+description: Tailor an existing cv-claw resume JSON for a specific job description. Use when the user provides a job description (or URL) and wants their resume optimized for that role — bullets rewritten, skills reordered, irrelevant experience trimmed. Produces a new variant resumes/{base}-{slug}.json, never overwriting the source.
+compatibility: Reads and writes resumes/*.json files. Render via `cv-claw render resumes/{base}-{slug}.json`.
 ---
 
 # tailor-resume
@@ -29,13 +29,65 @@ They'll say "tailor my resume for this role", "make a version for X",
 **Never overwrite the source.** The user keeps the original as their
 canonical resume; tailored variants are alongside it.
 
-The output must conform to the [cv-claw schema](../../SCHEMA.md). Same
+The output must conform to the cv-claw schema (defined below). Same
 shape as the input, just edited content.
+
+## Schema
+
+Authoritative implementation: pydantic models in `src/cvclaw/schema.py`
+(strict — unknown fields fail validation). Validate with
+`cv-claw validate <file.json>`.
+
+```python
+class Link(BaseModel):
+    label: str
+    href: str
+
+class Contact(BaseModel):
+    location: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    note: str | None = None         # free-form, e.g. visa status
+
+class Header(BaseModel):
+    name: str
+    contact: Contact | None = None
+    links: list[Link] = []
+
+class TimelineItem(BaseModel):
+    title: str
+    org: str | None = None
+    location: str | None = None
+    dates: str | None = None        # free-form: "Jan 2023 – Present", "2019"
+    href: str | None = None
+    bullets: list[str] = []         # empty → item renders compactly
+
+class Resume(BaseModel):
+    template: str                   # template key, e.g. "classic"
+    header: Header
+    sections: list[Section]         # rendered top-to-bottom
+```
+
+`Section` is a discriminated union on `kind`. Every section has a `name`
+(the heading) and a `data` payload whose shape depends on `kind`:
+
+| `kind`     | `data` shape                                            | Use for                                       |
+|------------|---------------------------------------------------------|-----------------------------------------------|
+| `prose`    | `{ body: str }`                                         | Summary, objective, short bio                 |
+| `keyvalue` | `{ items: [{ label: str, value: str }] }`               | Skills by category, certifications, languages |
+| `list`     | `{ items: [{ text: str, href: str \| None }] }`         | Publications, interests, references           |
+| `timeline` | `{ items: [TimelineItem] }`                             | Experience, education, projects               |
+
+Field discipline:
+- Dates are free-form strings — use the resume's original format.
+- String fields render as plain text; only `href` becomes a link.
+- `sections[]` and each section's `items[]` render top-to-bottom.
+- Omit optional fields entirely rather than including them as `""` or
+  `[]`. Omit `bullets` rather than `"bullets": []`.
 
 ## Procedure
 
-1. **Read the source resume** at `resumes/<base>.json`. Read the schema
-   doc if you haven't already.
+1. **Read the source resume** at `resumes/<base>.json`.
 
 2. **Read the job description.** Identify:
    - Required skills and technologies (especially anything in

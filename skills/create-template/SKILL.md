@@ -35,13 +35,62 @@ skipped by discovery.
 ## Before you start
 
 Read these in order:
-1. [SCHEMA.md](../../SCHEMA.md) — the JSON shape your template consumes.
+1. The **Schema** section below — the JSON shape your template consumes.
 2. [references/template-anatomy.md](references/template-anatomy.md) — CSS scoping rules, page sizing, print conventions.
 3. [references/kind-renderers.md](references/kind-renderers.md) — how each section kind should be rendered.
 4. [assets/starter/](assets/starter/) — boilerplate to copy and modify.
 
 Also look at the existing [templates/classic/](../../templates/classic/)
 as a working reference.
+
+## Schema
+
+The resume JSON that your template will render has this shape
+(authoritative source: pydantic models in `src/cvclaw/schema.py`):
+
+```python
+class Link(BaseModel):
+    label: str
+    href: str
+
+class Contact(BaseModel):
+    location: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    note: str | None = None
+
+class Header(BaseModel):
+    name: str
+    contact: Contact | None = None
+    links: list[Link] = []
+
+class TimelineItem(BaseModel):
+    title: str
+    org: str | None = None
+    location: str | None = None
+    dates: str | None = None
+    href: str | None = None
+    bullets: list[str] = []         # empty → render compactly
+
+class Resume(BaseModel):
+    template: str
+    header: Header
+    sections: list[Section]
+```
+
+`Section` is a discriminated union on `kind`. Each section has a `name`
+(the heading) and a `data` payload whose shape depends on `kind`:
+
+| `kind`     | `data` shape                                            |
+|------------|---------------------------------------------------------|
+| `prose`    | `{ body: str }`                                         |
+| `keyvalue` | `{ items: [{ label: str, value: str }] }`               |
+| `list`     | `{ items: [{ text: str, href: str \| None }] }`         |
+| `timeline` | `{ items: [TimelineItem] }`                             |
+
+In Jinja, the validated `Resume` is bound to `resume` — access fields
+by attribute (`resume.header.name`, `section.data.items`). All optional
+fields can be missing, so guard with `{% if ... %}`.
 
 ## Procedure
 

@@ -1,7 +1,7 @@
 ---
 name: ingest-resume
-description: Convert a resume (PDF, image, or pasted text) into a cv-claw JSON file. Use when the user provides an existing resume and wants it rendered through cv-claw, or asks to "ingest", "import", "convert my resume", or similar. Output is a single resumes/<name>.json file conforming to the cv-claw schema.
-compatibility: Produces a JSON file. Render via `cv-claw render resumes/<name>.json`.
+description: Convert a resume (PDF, image, or pasted text) into a cv-claw JSON file. Use when the user provides an existing resume and wants it rendered through cv-claw, or asks to "ingest", "import", "convert my resume", or similar. Output is a single resumes/{name}.json file conforming to the cv-claw schema.
+compatibility: Produces a JSON file. Render via `cv-claw render resumes/{name}.json`.
 ---
 
 # ingest-resume
@@ -21,9 +21,61 @@ cv-claw's editable JSON format. They'll usually say "ingest", "import",
 lowercase-with-hyphens identifier (e.g. `default`, `ada-lovelace`,
 `generic`). If you're not sure, use `default`.
 
-The file must conform to the [cv-claw schema](../../SCHEMA.md). Read that
-file before producing output — it defines `Resume`, `HeaderData`, the four
-section kinds, and the `TimelineItem` shape.
+The file must conform to the cv-claw schema, defined below.
+
+## Schema
+
+Authoritative implementation: pydantic models in `src/cvclaw/schema.py`
+(strict — unknown fields fail validation). Validate with
+`cv-claw validate <file.json>`.
+
+```python
+class Link(BaseModel):
+    label: str
+    href: str
+
+class Contact(BaseModel):
+    location: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    note: str | None = None         # free-form, e.g. visa status
+
+class Header(BaseModel):
+    name: str
+    contact: Contact | None = None
+    links: list[Link] = []
+
+class TimelineItem(BaseModel):
+    title: str
+    org: str | None = None
+    location: str | None = None
+    dates: str | None = None        # free-form: "Jan 2023 – Present", "2019"
+    href: str | None = None
+    bullets: list[str] = []         # empty → item renders compactly
+
+class Resume(BaseModel):
+    template: str                   # template key, e.g. "classic"
+    header: Header
+    sections: list[Section]         # rendered top-to-bottom
+```
+
+`Section` is a discriminated union on `kind`. Every section has a `name`
+(the heading) and a `data` payload whose shape depends on `kind`:
+
+| `kind`     | `data` shape                                            | Use for                                       |
+|------------|---------------------------------------------------------|-----------------------------------------------|
+| `prose`    | `{ body: str }`                                         | Summary, objective, short bio                 |
+| `keyvalue` | `{ items: [{ label: str, value: str }] }`               | Skills by category, certifications, languages |
+| `list`     | `{ items: [{ text: str, href: str \| None }] }`         | Publications, interests, references           |
+| `timeline` | `{ items: [TimelineItem] }`                             | Experience, education, projects               |
+
+Field discipline:
+- Dates are free-form strings — use the resume's original format.
+- String fields render as plain text; only `href` becomes a link.
+  Don't put markdown like `**bold**` in bullets.
+- `sections[]` and each section's `items[]` render top-to-bottom.
+- Omit optional fields entirely rather than including them as `""` or
+  `[]`. Omit `bullets` rather than `"bullets": []`.
 
 ## Procedure
 
@@ -40,8 +92,8 @@ section kinds, and the `TimelineItem` shape.
    then another heading like "EDUCATION"). Each becomes one section in
    the output.
 
-4. **Pick a `kind` for each section.** Use the [taxonomy in
-   SCHEMA.md](../../SCHEMA.md#the-five-kinds-taxonomy):
+4. **Pick a `kind` for each section.** Use the kinds taxonomy table
+   above:
 
    - Paragraph of text → `prose`
    - Label-then-content rows like "Languages: Python, Go" → `keyvalue`
