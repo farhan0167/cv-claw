@@ -1,0 +1,105 @@
+{# STARTER TEMPLATE — rename file to <name>.html.j2 and replace every
+   occurrence of "starter" (CSS class) with your template's lowercase
+   name. The matching <name>.css is auto-inlined by the renderer. #}
+<div class="starter">
+  <div class="page">
+
+    {# Header #}
+    {% set contact = resume.header.contact %}
+    {% set links = resume.header.links or [] %}
+    <header class="top">
+      <div class="name">{{ resume.header.name }}</div>
+      {% if contact %}
+        <div class="contact">
+          {% if contact.location %}<span>{{ contact.location }}</span>{% endif %}
+          {% if contact.email %}<span><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></span>{% endif %}
+          {% if contact.phone %}<span>{{ contact.phone }}</span>{% endif %}
+          {% if contact.note %}<span>{{ contact.note }}</span>{% endif %}
+        </div>
+      {% endif %}
+      {% if links %}
+        <div class="links">
+          {% for l in links %}<a href="{{ l.href }}">{{ l.label }}</a>{% endfor %}
+        </div>
+      {% endif %}
+    </header>
+
+    {# Sections #}
+    {% for section in resume.sections %}
+
+      {% if section.kind == "prose" %}
+        <section class="prose">
+          <h2 class="section">{{ section.name }}</h2>
+          <hr class="rule">
+          <p>{{ section.data.body }}</p>
+        </section>
+
+      {% elif section.kind == "keyvalue" %}
+        <section class="keyvalue">
+          <h2 class="section">{{ section.name }}</h2>
+          <hr class="rule">
+          <ul>
+            {% for it in section.data.items %}
+              <li><span class="label">{{ it.label }}</span> {{ it.value }}</li>
+            {% endfor %}
+          </ul>
+        </section>
+
+      {% elif section.kind == "list" %}
+        <section class="list">
+          <h2 class="section">{{ section.name }}</h2>
+          <hr class="rule">
+          <ul>
+            {% for it in section.data.items %}
+              <li>
+                {% if it.href %}<a href="{{ it.href }}">{{ it.text }}</a>{% else %}{{ it.text }}{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+
+      {% elif section.kind == "timeline" %}
+        {% set items = section.data.items %}
+        {% set any_bullets = items | selectattr("bullets") | list | length > 0 %}
+        {% if not any_bullets %}
+          <section class="timeline compact">
+            <h2 class="section">{{ section.name }}</h2>
+            <hr class="rule">
+            <ul>
+              {% for it in items %}
+                <li>
+                  <span><strong>{{ it.title }}</strong> {{ it.org or "" }}</span>
+                  {% if it.dates %}<span class="dates">{{ it.dates }}</span>{% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </section>
+        {% else %}
+          <section class="timeline">
+            <h2 class="section">{{ section.name }}</h2>
+            <hr class="rule">
+            {% for it in items %}
+              <div class="item">
+                <div class="item-header">
+                  <div class="item-title">
+                    {% if it.href %}<a href="{{ it.href }}">{{ it.title }}</a>{% else %}{{ it.title }}{% endif %}
+                  </div>
+                  {% if it.dates %}<div class="item-dates">{{ it.dates }}</div>{% endif %}
+                </div>
+                {% if it.org %}<div class="item-sub">{{ it.org }}</div>{% endif %}
+                {% if it.location %}<div class="item-location">{{ it.location }}</div>{% endif %}
+                {% if it.bullets %}
+                  <ul>
+                    {% for b in it.bullets %}<li>{{ b }}</li>{% endfor %}
+                  </ul>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </section>
+        {% endif %}
+
+      {% endif %}
+    {% endfor %}
+
+  </div>
+</div>

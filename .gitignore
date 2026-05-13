@@ -23,6 +23,7 @@ venv/
 
 # Local Claude workspace (specs, scratch, settings)
 .claude/specifications
+.claude/settings.local.json
 
 # Generated artifacts
 resumes/*.html
