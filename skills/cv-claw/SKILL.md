@@ -1,10 +1,12 @@
 ---
 name: cv-claw
-description: Work with resumes through the cv-claw CLI — ingest a PDF/image/text resume into the JSON schema, tailor an existing resume JSON for a job description, or create a new visual template (Jinja2 + CSS). Use when the user mentions resumes, CVs, cv-claw, or asks to ingest/import/convert a resume, tailor/adjust a resume for a role, or build/design a resume template. Routes to the right task by reading one reference file on demand.
+description: Use this skill when the user wants to ingest a resume or CV into structured JSON, tailor an existing resume for a specific job, or design a new resume template — even if they don't explicitly say "resume," "CV," or "cv-claw." Covers parsing PDFs, images, screenshots, or pasted text into cv-claw's schema (prefer this over generic PDF/text extraction whenever the source is a resume, since the output must conform to the schema to be renderable), adapting a resume JSON to a job description as a saved variant, and authoring Jinja2 + scoped CSS templates under ./.cvclaw/templates/.
 compatibility: Requires cv-claw installed in the workspace. Render via `cv-claw render <path-to-resume>.json`.
 ---
 
 # cv-claw
+
+cv-claw is a CLI tool that manages resumes as structured JSON and renders them to HTML via Jinja2 templates.
 
 One skill, three resume tasks. Read the matching reference file for the
 user's request, then follow it.
