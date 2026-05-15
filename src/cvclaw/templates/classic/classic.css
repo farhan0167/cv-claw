@@ -136,4 +136,8 @@
     min-height: auto;
     padding: 0.5in 0.6in;
   }
+  .classic .page-break {
+    break-before: page;
+    page-break-before: always;
+  }
 }

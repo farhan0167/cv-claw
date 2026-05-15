@@ -37,7 +37,10 @@ class Resume(BaseModel):
 ```
 
 `Section` is a discriminated union on `kind`. Every section has a `name`
-(the heading) and a `data` payload whose shape depends on `kind`:
+(the heading), an optional `page_break_before: bool` (default `false`;
+when `true` the section starts on a new page when printed / saved as
+PDF — has no effect on screen), and a `data` payload whose shape
+depends on `kind`:
 
 | `kind`     | `data` shape                                            | Use for                                       |
 |------------|---------------------------------------------------------|-----------------------------------------------|

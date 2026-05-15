@@ -27,8 +27,11 @@
 {% endmacro %}
 
 
+{%- macro _pb(section) -%}{%- if section.page_break_before %} page-break{% endif -%}{%- endmacro -%}
+
+
 {% macro prose(section) %}
-<section class="prose">
+<section class="prose{{ _pb(section) }}">
   {{ section_heading(section.name) }}
   <p>{{ section.data.body }}</p>
 </section>
@@ -36,7 +39,7 @@
 
 
 {% macro keyvalue(section) %}
-<section class="keyvalue">
+<section class="keyvalue{{ _pb(section) }}">
   {{ section_heading(section.name) }}
   <ul>
     {% for it in section.data.items %}
@@ -48,7 +51,7 @@
 
 
 {% macro list_section(section) %}
-<section class="list">
+<section class="list{{ _pb(section) }}">
   {{ section_heading(section.name) }}
   <ul>
     {% for it in section.data.items %}
@@ -65,7 +68,7 @@
 {% set items = section.data.items %}
 {% set any_bullets = items | selectattr("bullets") | list | length > 0 %}
 {% if not any_bullets %}
-<section class="timeline compact">
+<section class="timeline compact{{ _pb(section) }}">
   {{ section_heading(section.name) }}
   <ul>
     {% for it in items %}
@@ -77,7 +80,7 @@
   </ul>
 </section>
 {% else %}
-<section class="timeline">
+<section class="timeline{{ _pb(section) }}">
   {{ section_heading(section.name) }}
   {% for it in items %}
     <div class="item">

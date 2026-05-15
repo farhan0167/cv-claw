@@ -74,24 +74,28 @@ class ProseSection(_Strict):
     name: str
     kind: Literal["prose"]
     data: ProseData
+    page_break_before: bool = False
 
 
 class KeyValueSection(_Strict):
     name: str
     kind: Literal["keyvalue"]
     data: KeyValueData
+    page_break_before: bool = False
 
 
 class ListSection(_Strict):
     name: str
     kind: Literal["list"]
     data: ListData
+    page_break_before: bool = False
 
 
 class TimelineSection(_Strict):
     name: str
     kind: Literal["timeline"]
     data: TimelineData
+    page_break_before: bool = False
 
 
 Section = Annotated[
