@@ -28,9 +28,10 @@ Directories starting with `_` are reserved for shared partials and are
 skipped by discovery.
 
 **Shadowing.** If `<name>` matches a bundled template (today: `classic`),
-the workspace copy shadows it. That's the supported way to fork — copy
-the bundled template into `./.cvclaw/templates/<name>/` and edit
-freely.
+the workspace copy shadows it. The supported way to fork an existing
+bundled template is `cv-claw eject <name>` — that copies it into
+`./.cvclaw/templates/<name>/` for editing. Use that rather than copying
+files by hand.
 
 **The `.cvclaw/` prefix** is reserved for cv-claw workspace state. The
 skill creates `./.cvclaw/templates/` on first use; the user typically
@@ -45,10 +46,10 @@ Read these in order:
 4. The starter at [../assets/starter/](../assets/starter/) — boilerplate to copy and modify.
 
 Also look at the bundled `classic` template as a working reference.
-You can list templates and locate the bundled copy by running
-`cv-claw list-templates` (entries are annotated `(bundled)` /
-`(workspace)`); the bundled `classic/` lives inside the installed
-cv-claw package.
+List templates with `cv-claw list-templates` (entries are annotated
+`(bundled)` / `(workspace)`). To get an editable copy of a bundled
+template, run `cv-claw eject classic` — it lands at
+`./.cvclaw/templates/classic/`.
 
 ## Procedure
 
@@ -122,8 +123,9 @@ cv-claw package.
   registration; you only add files under `./.cvclaw/templates/<name>/`.
 - **Don't write to the bundled templates root.** That lives inside the
   installed cv-claw package and is read-only from the user's
-  perspective. To customize a bundled template, copy it into
-  `./.cvclaw/templates/<same-name>/` (shadowing) and edit there.
+  perspective. To customize a bundled template, run
+  `cv-claw eject <name>` — it copies the template into
+  `./.cvclaw/templates/<name>/` (shadowing) so you can edit there.
 - **Don't import from other templates' folders.** Each template is
   self-contained. If you're tempted to share code, put it under
   `./.cvclaw/templates/_partials/` and `{% include %}` from there —

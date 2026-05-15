@@ -11,9 +11,11 @@ from pydantic import ValidationError
 from cvclaw import __version__
 from cvclaw.render import load_resume, render_file
 from cvclaw.templates_loader import (
+    TemplateAlreadyEjectedError,
     TemplateNotFoundError,
     TemplateSource,
     discover_templates,
+    eject_template,
 )
 
 app = typer.Typer(
@@ -124,6 +126,44 @@ def list_templates(
             typer.echo(f"{name} ({tpl.source.value})")
         else:
             typer.echo(name)
+
+
+@app.command()
+def eject(
+    name: str = typer.Argument(..., help="Template name to copy into the workspace."),
+    from_root: Optional[Path] = typer.Option(  # noqa: UP007
+        None,
+        "--from",
+        help="Source templates root. Defaults to normal discovery (prefers bundled).",
+    ),
+    to_root: Optional[Path] = typer.Option(  # noqa: UP007
+        None,
+        "--to",
+        help="Destination templates root. Defaults to ./.cvclaw/templates/.",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Overwrite an existing workspace copy of the template.",
+    ),
+) -> None:
+    """Copy a template into the workspace so it can be edited in place."""
+
+    try:
+        result = eject_template(
+            name,
+            from_root=from_root,
+            to_root=to_root,
+            force=force,
+        )
+    except TemplateNotFoundError as exc:
+        typer.secho(str(exc), fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+    except TemplateAlreadyEjectedError as exc:
+        typer.secho(str(exc), fg=typer.colors.YELLOW, err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(str(result.destination))
 
 
 @app.command()
