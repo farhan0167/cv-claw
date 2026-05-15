@@ -24,6 +24,7 @@ collapses discovery to that single root.
 
 from __future__ import annotations
 
+import shutil
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -150,6 +151,90 @@ def get_template(name: str, templates_dir: Path | None = None) -> Template:
             f"Template {name!r} not found. Available: {available}"
         )
     return templates[name]
+
+
+class TemplateAlreadyEjectedError(FileExistsError):
+    """Raised when ejecting would overwrite an existing workspace copy."""
+
+
+@dataclass(frozen=True)
+class EjectResult:
+    """Outcome of an :func:`eject_template` call."""
+
+    name: str
+    source: Path
+    destination: Path
+
+
+def eject_template(
+    name: str,
+    *,
+    from_root: Path | None = None,
+    to_root: Path | None = None,
+    force: bool = False,
+) -> EjectResult:
+    """Copy a template directory into the workspace so it can be edited.
+
+    Parameters
+    ----------
+    name:
+        Template name (the directory name; e.g. ``classic``).
+    from_root:
+        Optional source root. When ``None``, use normal discovery and prefer
+        whichever root provides the template — typically bundled.
+    to_root:
+        Destination templates root. Defaults to ``./.cvclaw/templates/``.
+    force:
+        Overwrite an existing destination directory. Without this, the call
+        raises :class:`TemplateAlreadyEjectedError` if the destination exists.
+
+    Returns
+    -------
+    EjectResult
+        Records the source and destination paths used.
+    """
+
+    # Eject inverts normal discovery priority: we want the *bundled* source
+    # by default, since the user is asking for a fresh workspace copy. Only
+    # honor an explicit --from override.
+    if from_root is not None:
+        template = get_template(name, from_root)
+    else:
+        template = _bundled_template(name)
+
+    dest_root = to_root if to_root is not None else workspace_templates_dir()
+    dest = dest_root / name
+
+    if dest.exists():
+        if not force:
+            raise TemplateAlreadyEjectedError(
+                f"Workspace already has {name!r} at {_display(dest)}. "
+                "Pass --force to overwrite."
+            )
+        shutil.rmtree(dest)
+
+    dest_root.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(template.root, dest)
+    return EjectResult(name=name, source=template.root, destination=dest)
+
+
+def _bundled_template(name: str) -> Template:
+    """Resolve a template against the bundled root only.
+
+    Used by :func:`eject_template` so that the source is always the
+    bundled version, even when a workspace copy already exists.
+    """
+
+    return get_template(name, bundled_templates_dir())
+
+
+def _display(path: Path) -> str:
+    """Best-effort short path for user-facing messages."""
+
+    try:
+        return str(path.resolve().relative_to(Path.cwd().resolve()))
+    except ValueError:
+        return str(path.resolve())
 
 
 def build_environment(templates_dir: Path | None = None) -> Environment:
