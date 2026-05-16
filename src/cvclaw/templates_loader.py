@@ -46,6 +46,12 @@ def bundled_templates_dir() -> Path:
     return Path(__file__).resolve().parent / "templates"
 
 
+def bundled_example_path() -> Path:
+    """Return the example resume JSON shipped inside the installed package."""
+
+    return Path(__file__).resolve().parent / "examples" / "example.json"
+
+
 def workspace_state_dir() -> Path:
     """Return ``./.cvclaw/`` relative to CWD (reserved workspace namespace)."""
 
