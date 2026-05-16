@@ -225,7 +225,7 @@ wheels = [
 
 [[package]]
 name = "cv-claw"
-version = "0.1.2"
+version = "0.1.3"
 source = { editable = "." }
 dependencies = [
     { name = "jinja2" },
