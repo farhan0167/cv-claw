@@ -9,38 +9,68 @@ A small live-preview dev server is available behind an optional extra.
 
 ## Install
 
-This project uses [uv](https://docs.astral.sh/uv/).
+cv-claw is a standalone CLI. Install it however you manage Python
+tools:
 
 ```bash
-uv sync
+# pip
+pip install cv-claw
+
+# uv (installs the CLI on your PATH, isolated)
+uv tool install cv-claw
 ```
 
-To include the optional dev server and PDF backends:
+Either way you get the `cv-claw` command. To enable the optional
+live-reload dev server or the PDF backend, install the corresponding
+extra:
 
 ```bash
-uv sync --all-extras
+pip install 'cv-claw[serve]'   # cv-claw serve
+pip install 'cv-claw[pdf]'     # native PDF export
 ```
 
 ## Quickstart
 
+Write the bundled example resume to start from, then render it:
+
 ```bash
-uv run cv-claw render resumes/example.json
-# → writes resumes/example.html next to the JSON
+cv-claw init                  # → writes resume.json (a complete example)
+cv-claw render resume.json    # → writes resume.html next to the JSON
 ```
 
-The dev repo keeps its example JSON under `resumes/`, but in your own
-workspace the JSON can live anywhere — cv-claw just renders whichever
-path you give it. To keep generated HTML out of the way:
+`cv-claw init` won't clobber an existing file — pass a path or
+`--force` (`cv-claw init my-resume.json`). The example is a full,
+realistic resume exercising every section kind; edit it into your own
+and re-render.
+
+cv-claw renders whichever path you give it — the JSON can live
+anywhere. To keep generated HTML out of the way:
 
 ```bash
-uv run cv-claw render path/to/resume.json --output-dir build/
+cv-claw render path/to/resume.json --output-dir build/
 # → writes build/resume.html
 ```
 
-Open the HTML in a browser and use the browser's print dialog to export
-to PDF.
+Open the HTML in a browser and use the browser's print dialog to
+export to PDF. `classic` is the only bundled template; run
+`cv-claw list-templates` to see what's available.
 
 ## CLI
+
+### init
+
+```
+cv-claw init [path] [flags]
+```
+
+Write the bundled example resume JSON to `path` (default
+`resume.json`). Refuses to overwrite an existing file unless `--force`
+is given. Parent directories are created as needed.
+
+| Flag      | Default       | Description                                  |
+|-----------|---------------|----------------------------------------------|
+| `[path]`  | `resume.json` | Destination file for the example JSON.       |
+| `--force` | off           | Overwrite an existing file at the destination. |
 
 ### render
 

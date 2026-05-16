@@ -14,6 +14,7 @@ from cvclaw.templates_loader import (
     TemplateAlreadyEjectedError,
     TemplateNotFoundError,
     TemplateSource,
+    bundled_example_path,
     discover_templates,
     eject_template,
 )
@@ -43,6 +44,37 @@ def _main(
     ),
 ) -> None:
     """cv-claw — turn resume JSON into a print-ready HTML artifact."""
+
+
+@app.command()
+def init(
+    output: Path = typer.Argument(  # noqa: A002
+        Path("resume.json"),
+        dir_okay=False,
+        help="Where to write the example resume JSON.",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Overwrite an existing file at the destination.",
+    ),
+) -> None:
+    """Write a complete example resume JSON to start from."""
+
+    if output.exists() and not force:
+        typer.secho(
+            f"{output} already exists. Pass --force to overwrite.",
+            fg=typer.colors.YELLOW,
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    source = bundled_example_path()
+    if output.parent and not output.parent.exists():
+        output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+    typer.echo(str(output))
 
 
 @app.command()
