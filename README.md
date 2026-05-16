@@ -1,11 +1,39 @@
 # cv-claw
 
-Render a resume JSON file into a print-ready, self-contained HTML
-document via Jinja2 templates. The primary user is Claude (or any
-shell-capable agent): produce JSON, then run one command to hand the
-user a real artifact — no browser, no dev server required.
+Hand Claude a PDF, a screenshot, or a job posting and ask in plain
+language — *"turn this into a resume," "tailor it for this role,"
+"make the name bigger"* — and get back a polished, print-ready HTML
+document you can open and export to PDF. Keep your resume working with
+Claude instead of fighting a document editor.
 
-## Install
+**The problem.** The common advice is to tailor your resume to each
+job description — but maintaining that by hand is a pain. The template
+generally stays the same; what changes is the content that goes into
+it. AI chat can rewrite the words *and* style them — but each
+conversation is a one-off: a fresh document, regenerated from scratch,
+with no canonical original behind it. Run it again for the next job and
+the styling drifts; tailor five roles and you're juggling five
+unrelated files with no shared source of truth. There's no clean
+separation between *what your resume says* and *how it looks*, so the
+two can't vary independently.
+
+**What cv-claw does.** It splits a resume into structured content
+(JSON, validated against a fixed schema) and a visual template
+(Jinja2 + CSS), then renders the two into a single self-contained HTML
+file — no browser automation, no dev server, no frontend toolchain.
+Structured content is what makes the resume editable by an agent:
+Claude works on JSON and templates, then runs one command to produce
+the artifact. You talk to Claude; cv-claw renders.
+
+The template side is just as open. Because it's plain Jinja2 + CSS
+that Claude writes, there's no design barrier — you're not picking
+from a fixed gallery.
+Describe the look you want, or hand over a reference, and Claude
+authors the template to match — and because content and template are
+separate, swapping the layout never touches a word of your resume.
+Any layout you can describe is a layout you can render.
+
+## 📦 Install
 
 cv-claw is a standalone CLI. Install it however you manage Python
 tools:
@@ -25,9 +53,61 @@ backend, install the corresponding extra:
 pip install 'cv-claw[pdf]'     # native PDF export
 ```
 
-## Quickstart
+## 🚀 Quickstart
 
-Write the bundled example resume to start from, then render it:
+cv-claw is built to be driven by Claude. The fastest path is to install
+the CLI **and** the skill, then describe what you want in plain
+language — Claude produces the JSON and runs the render for you. Start
+here.
+
+### Use it through Claude
+
+The [`skills/cv-claw/`](skills/cv-claw/) directory ships a single
+[Agent Skill](https://agentskills.io) covering four resume tasks —
+ingest (PDF/image/text → JSON), tailor (adapt for a job description),
+tweak-template (restyle the current render), and create-template (new
+Jinja2 layout). The main `SKILL.md` stays small; each task lives under
+`references/` and is loaded on demand.
+
+#### Claude Code (recommended)
+
+Every release attaches a packaged `cv-claw-skill.zip`. The link below
+always points at the newest release:
+
+```bash
+# Install the CLI
+pip install cv-claw   # or: uv tool install cv-claw
+
+# Drop the skill into Claude's skills directory
+mkdir -p ~/.claude/skills
+curl -fsSL -o /tmp/cv-claw-skill.zip \
+  https://github.com/farhan0167/cv-claw/releases/latest/download/cv-claw-skill.zip
+unzip -o /tmp/cv-claw-skill.zip -d ~/.claude/skills
+```
+
+This leaves you with `~/.claude/skills/cv-claw/`. Point your agent at
+it and start producing resume JSON. Substitute a project-local
+`.claude/skills/` for the home directory if you want it scoped to one
+workspace.
+
+#### claude.ai and Claude Desktop
+
+Download the same
+[`cv-claw-skill.zip`](https://github.com/farhan0167/cv-claw/releases/latest/download/cv-claw-skill.zip)
+and import it through the Skills UI — no CLI or unzipping needed.
+Open **Settings → Capabilities → Skills**, choose **Upload skill**,
+and select the zip.
+
+#### From a clone
+
+If you've cloned this repo, copy [`skills/cv-claw/`](skills/cv-claw/)
+into your workspace's skills directory directly — it's the same
+content the release zip is built from.
+
+### Drive the CLI by hand
+
+If you'd rather work without the skill, write the bundled example
+resume to start from, then render it:
 
 ```bash
 cv-claw init                  # → writes resume.json (a complete example)
@@ -51,7 +131,7 @@ Open the HTML in a browser and use the browser's print dialog to
 export to PDF. `classic` is the only bundled template; run
 `cv-claw list-templates` to see what's available.
 
-## CLI
+## ⚙️ CLI
 
 ### init
 
@@ -114,58 +194,14 @@ Useful as a sanity check before rendering.
 |-------------|-----------------------|
 | `--version` | Show version and exit. |
 
-## Schema
+## 🧬 Schema
 
 A resume is a JSON document with a `template`, a `header`, and a list of
 `sections`. Each section is one of four kinds — `prose`, `keyvalue`,
 `list`, or `timeline` — and is dispatched to the matching renderer in
 the template.
 
-## Using the skill in your own workspace
-
-The [`skills/cv-claw/`](skills/cv-claw/) directory ships a single
-[Agent Skill](https://agentskills.io) covering four resume tasks —
-ingest (PDF/image/text → JSON), tailor (adapt for a job description),
-tweak-template (restyle the current render), and create-template (new
-Jinja2 layout). The main `SKILL.md` stays small; each task lives under
-`references/` and is loaded on demand.
-
-### Claude Code (recommended)
-
-Every release attaches a packaged `cv-claw-skill.zip`. The link below
-always points at the newest release:
-
-```bash
-# Install the CLI
-pip install cv-claw   # or: uv tool install cv-claw
-
-# Drop the skill into Claude's skills directory
-mkdir -p ~/.claude/skills
-curl -fsSL -o /tmp/cv-claw-skill.zip \
-  https://github.com/farhan0167/cv-claw/releases/latest/download/cv-claw-skill.zip
-unzip -o /tmp/cv-claw-skill.zip -d ~/.claude/skills
-```
-
-This leaves you with `~/.claude/skills/cv-claw/`. Point your agent at
-it and start producing resume JSON. Substitute a project-local
-`.claude/skills/` for the home directory if you want it scoped to one
-workspace.
-
-### claude.ai and Claude Desktop
-
-Download the same
-[`cv-claw-skill.zip`](https://github.com/farhan0167/cv-claw/releases/latest/download/cv-claw-skill.zip)
-and import it through the Skills UI — no CLI or unzipping needed.
-Open **Settings → Capabilities → Skills**, choose **Upload skill**,
-and select the zip.
-
-### From a clone
-
-If you've cloned this repo, copy [`skills/cv-claw/`](skills/cv-claw/)
-into your workspace's skills directory directly — it's the same
-content the release zip is built from.
-
-## Templates
+## 🎨 Templates
 
 Templates live in two roots, both auto-discovered:
 
@@ -198,7 +234,7 @@ skipped by template discovery. Add a new template by dropping in a new
 folder with the same shape (the [`create-template` task](skills/cv-claw/references/create-template.md)
 automates the scaffolding).
 
-## Resume JSON conventions
+## 📄 Resume JSON conventions
 
 cv-claw doesn't impose a directory for your resume JSON — pass any
 path on the CLI and it just works. The bundled skill (used by Claude
@@ -207,7 +243,7 @@ should live and can record the answer in your workspace `CLAUDE.md`
 under a `## cv-claw: resume location` heading so future sessions don't
 re-ask.
 
-## Development
+## 🛠️ Development
 
 ```bash
 make install     # uv sync --all-extras
@@ -218,6 +254,6 @@ make render      # render resumes/example.json
 make clean       # remove caches and build artifacts
 ```
 
-## License
+## 📜 License
 
 MIT — see [`LICENSE`](LICENSE).
