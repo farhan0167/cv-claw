@@ -46,6 +46,28 @@ jobs:
           name: dist
           path: dist/
 
+  skill-zip:
+    name: Attach skill zip to release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # required to upload a release asset
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build skill zip
+        run: |
+          # Zip with cv-claw/ at the archive root so users can unzip
+          # straight into ~/.claude/skills/ and get ~/.claude/skills/cv-claw/.
+          cd skills
+          zip -r ../cv-claw-skill.zip cv-claw
+
+      - name: Upload skill zip to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" cv-claw-skill.zip --clobber
+
   publish:
     name: Publish to PyPI
     needs: build

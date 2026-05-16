@@ -89,8 +89,8 @@ template, run `cv-claw eject classic` — it lands at
    ```
 
    This writes an HTML file next to the JSON by default. Open it in a
-   browser to inspect. For an iterative loop with auto-reload, run
-   `cv-claw serve` (requires the optional `[serve]` extra installed).
+   browser to inspect, then re-run `cv-claw render` after each edit to
+   refresh.
 
 7. **Iterate visually.** The user will likely want CSS tweaks after
    seeing it rendered. Treat that as a normal back-and-forth.

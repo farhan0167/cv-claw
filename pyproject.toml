@@ -1,6 +1,6 @@
 [project]
 name = "cv-claw"
-version = "0.1.1"
+version = "0.1.2"
 description = "Render resume JSON to print-ready HTML using Jinja templates."
 readme = "README.md"
 license = { text = "MIT" }
@@ -27,12 +27,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-serve = [
-    "fastapi>=0.110",
-    "uvicorn>=0.29",
-    "watchdog>=4.0",
-    "websockets>=12.0",
-]
 pdf = [
     "weasyprint>=62.0",
 ]

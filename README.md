@@ -5,8 +5,6 @@ document via Jinja2 templates. The primary user is Claude (or any
 shell-capable agent): produce JSON, then run one command to hand the
 user a real artifact — no browser, no dev server required.
 
-A small live-preview dev server is available behind an optional extra.
-
 ## Install
 
 cv-claw is a standalone CLI. Install it however you manage Python
@@ -20,12 +18,10 @@ pip install cv-claw
 uv tool install cv-claw
 ```
 
-Either way you get the `cv-claw` command. To enable the optional
-live-reload dev server or the PDF backend, install the corresponding
-extra:
+Either way you get the `cv-claw` command. To enable the optional PDF
+backend, install the corresponding extra:
 
 ```bash
-pip install 'cv-claw[serve]'   # cv-claw serve
 pip install 'cv-claw[pdf]'     # native PDF export
 ```
 
@@ -112,22 +108,6 @@ cv-claw validate <input.json>
 Run schema validation only. Exits 0 on success, non-zero on failure.
 Useful as a sanity check before rendering.
 
-### serve
-
-```
-cv-claw serve [flags]
-```
-
-Run a small live-reload dev server. Requires the optional `[serve]`
-extra (`uv sync --all-extras` or `pip install 'cv-claw[serve]'`).
-
-| Flag                    | Default       | Description                                                  |
-|-------------------------|---------------|--------------------------------------------------------------|
-| `--host <addr>`         | `127.0.0.1`   | Host to bind to.                                             |
-| `-p, --port <int>`      | `8000`        | Port to listen on.                                           |
-| `--resumes-dir <dir>`   | CWD           | Directory of resume JSON files to serve.                     |
-| `--templates-dir <dir>` | auto-discover | Replace the default template search roots with a single dir. |
-
 ### Global
 
 | Flag        | Description           |
@@ -144,17 +124,46 @@ the template.
 ## Using the skill in your own workspace
 
 The [`skills/cv-claw/`](skills/cv-claw/) directory ships a single
-[Agent Skill](https://agentskills.io) covering three resume tasks —
+[Agent Skill](https://agentskills.io) covering four resume tasks —
 ingest (PDF/image/text → JSON), tailor (adapt for a job description),
-and create-template (new Jinja2 layout). The main `SKILL.md` stays
-small; each task lives under `references/` and is loaded on demand.
+tweak-template (restyle the current render), and create-template (new
+Jinja2 layout). The main `SKILL.md` stays small; each task lives under
+`references/` and is loaded on demand.
 
-To use:
+### Claude Code (recommended)
 
-1. Install cv-claw in your workspace: `uv add cv-claw` (or
-   `pip install cv-claw`).
-2. Copy `skills/cv-claw/` into your workspace's skills directory.
-3. Point your agent at it and start producing resume JSON.
+Every release attaches a packaged `cv-claw-skill.zip`. The link below
+always points at the newest release:
+
+```bash
+# Install the CLI
+pip install cv-claw   # or: uv tool install cv-claw
+
+# Drop the skill into Claude's skills directory
+mkdir -p ~/.claude/skills
+curl -fsSL -o /tmp/cv-claw-skill.zip \
+  https://github.com/farhan0167/cv-claw/releases/latest/download/cv-claw-skill.zip
+unzip -o /tmp/cv-claw-skill.zip -d ~/.claude/skills
+```
+
+This leaves you with `~/.claude/skills/cv-claw/`. Point your agent at
+it and start producing resume JSON. Substitute a project-local
+`.claude/skills/` for the home directory if you want it scoped to one
+workspace.
+
+### claude.ai and Claude Desktop
+
+Download the same
+[`cv-claw-skill.zip`](https://github.com/farhan0167/cv-claw/releases/latest/download/cv-claw-skill.zip)
+and import it through the Skills UI — no CLI or unzipping needed.
+Open **Settings → Capabilities → Skills**, choose **Upload skill**,
+and select the zip.
+
+### From a clone
+
+If you've cloned this repo, copy [`skills/cv-claw/`](skills/cv-claw/)
+into your workspace's skills directory directly — it's the same
+content the release zip is built from.
 
 ## Templates
 
