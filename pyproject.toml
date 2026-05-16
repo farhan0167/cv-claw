@@ -27,12 +27,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-serve = [
-    "fastapi>=0.110",
-    "uvicorn>=0.29",
-    "watchdog>=4.0",
-    "websockets>=12.0",
-]
 pdf = [
     "weasyprint>=62.0",
 ]

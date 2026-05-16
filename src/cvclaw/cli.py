@@ -220,41 +220,5 @@ def validate(
     typer.secho(f"OK: {input}", fg=typer.colors.GREEN)
 
 
-@app.command()
-def serve(
-    port: int = typer.Option(8000, "--port", "-p", help="Port to listen on."),
-    host: str = typer.Option("127.0.0.1", "--host", help="Host to bind to."),
-    resumes_dir: Path = typer.Option(
-        Path.cwd(),
-        "--resumes-dir",
-        help="Directory of resume JSON files to serve. Defaults to CWD.",
-    ),
-    templates_dir: Optional[Path] = typer.Option(  # noqa: UP007
-        None,
-        "--templates-dir",
-        help="Override the templates directory.",
-    ),
-) -> None:
-    """Run the dev server with live-reload (requires the [serve] extra)."""
-
-    try:
-        from cvclaw.serve import run  # noqa: PLC0415 (optional import)
-    except ImportError as exc:
-        typer.secho(
-            "The 'serve' command requires the optional [serve] extra. "
-            "Install with: pip install 'cv-claw[serve]'",
-            fg=typer.colors.RED,
-            err=True,
-        )
-        raise typer.Exit(code=1) from exc
-
-    run(
-        host=host,
-        port=port,
-        resumes_dir=resumes_dir,
-        templates_dir=templates_dir,
-    )
-
-
 if __name__ == "__main__":
     app()
